@@ -1,0 +1,55 @@
+name: Build iOS IPA
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Prebuild
+        run: npx expo prebuild --platform ios --no-interactive
+
+      - name: Pod Install
+        run: |
+          cd ios
+          pod install
+
+      - name: Build Unsigned Archive
+        run: |
+          cd ios
+          xcodebuild -workspace AiVoiceReader.xcworkspace \
+            -scheme AiVoiceReader \
+            -configuration Release \
+            -sdk iphoneos \
+            -archivePath $PWD/build/AiVoiceReader.xcarchive \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            clean archive
+
+      - name: Export IPA
+        run: |
+          cd ios
+          mkdir -p build/Payload
+          mv build/AiVoiceReader.xcarchive/Products/Applications/AiVoiceReader.app build/Payload/
+          cd build
+          zip -r AiVoiceReader.ipa Payload
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release
+          path: ios/build/AiVoiceReader.ipa
