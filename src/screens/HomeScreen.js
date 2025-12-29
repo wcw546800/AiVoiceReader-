@@ -1,6 +1,6 @@
 /// <reference types="nativewind/types" />
 import React, { useCallback, useState } from 'react';
-import { View, Text, TouchableOpacity, FlatList, Alert, Image, StatusBar } from 'react-native';
+import { View, Text, TouchableOpacity, FlatList, Alert, Image, StatusBar, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as DocumentPicker from 'expo-document-picker';
 import * as FileSystem from 'expo-file-system';
@@ -34,7 +34,16 @@ export default function HomeScreen({ navigation }) {
             if (result.canceled) return;
 
             const file = result.assets[0];
-            const content = await FileSystem.readAsStringAsync(file.uri);
+
+            let content;
+            if (Platform.OS === 'web') {
+                // Web: Fetch the blob/file content
+                const response = await fetch(file.uri);
+                content = await response.text();
+            } else {
+                // Native: Use FileSystem
+                content = await FileSystem.readAsStringAsync(file.uri);
+            }
 
             if (content.length < 50) {
                 Alert.alert("Failed", "文件内容过短");
