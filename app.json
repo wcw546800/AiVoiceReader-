@@ -14,6 +14,7 @@
             "bundleIdentifier": "com.anonymous.AiVoiceReader"
         },
         "android": {
+            "package": "com.anonymous.AiVoiceReader",
             "adaptiveIcon": {
                 "backgroundColor": "#ffffff"
             }
